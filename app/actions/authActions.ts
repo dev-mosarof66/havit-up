@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { logger } from "@/lib/logger";
 
 const secretKey = process.env.JWT_SECRET || "super-secret-key-for-dev-only";
 const key = new TextEncoder().encode(secretKey);
@@ -77,7 +78,7 @@ export async function registerUser(formData: FormData) {
 
     return { success: true };
   } catch (error: any) {
-    console.error("Register error:", error);
+    logger.error("AuthActions", "Register error", error);
     return { success: false, error: error.message || "Failed to register" };
   }
 }
@@ -116,7 +117,7 @@ export async function loginUser(formData: FormData) {
 
     return { success: true };
   } catch (error: any) {
-    console.error("Login error:", error);
+    logger.error("AuthActions", "Login error", error);
     return { success: false, error: error.message || "Failed to log in" };
   }
 }

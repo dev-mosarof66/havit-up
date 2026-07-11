@@ -7,6 +7,7 @@ import { Category } from "@/lib/entities/Category";
 import { revalidatePath } from "next/cache";
 import { Like } from "typeorm";
 import { getSession } from "@/app/actions/authActions";
+import { logger } from "@/lib/logger";
 
 export async function createHabit(data: {
   name: string;
@@ -53,7 +54,7 @@ export async function createHabit(data: {
     
     return { success: true, habit: plainHabit };
   } catch (error) {
-    console.error("Failed to create habit:", error);
+    logger.error("HabitActions", "Failed to create habit", error);
     return { success: false, error: "Failed to create habit in database" };
   }
 }
@@ -69,7 +70,7 @@ export async function getCategories() {
     
     return { success: true, categories: categories.map(c => ({ id: c.id, name: c.name, color: c.color })) };
   } catch (error) {
-    console.error("Failed to fetch categories:", error);
+    logger.error("HabitActions", "Failed to fetch categories", error);
     return { success: false, error: "Failed to fetch categories", categories: [] };
   }
 }
@@ -93,7 +94,7 @@ export async function createCategory(name: string, color: string = "#9ca3af") {
     
     return { success: true, category: { id: newCategory.id, name: newCategory.name, color: newCategory.color } };
   } catch (error) {
-    console.error("Failed to create category:", error);
+    logger.error("HabitActions", "Failed to create category", error);
     return { success: false, error: "Failed to create category" };
   }
 }
@@ -151,7 +152,7 @@ export async function getHabits() {
     
     return { success: true, habits: formattedHabits };
   } catch (error) {
-    console.error("Failed to fetch habits:", error);
+    logger.error("HabitActions", "Failed to fetch habits", error);
     return { success: false, error: "Failed to fetch habits from database", habits: [] };
   }
 }
@@ -188,7 +189,7 @@ export async function updateHabit(id: string | number, data: {
     revalidatePath("/habits");
     return { success: true, habit: { ...habit } };
   } catch (error) {
-    console.error("Failed to update habit:", error);
+    logger.error("HabitActions", "Failed to update habit", error);
     return { success: false, error: "Failed to update habit in database" };
   }
 }
@@ -211,7 +212,7 @@ export async function deleteHabit(id: string | number) {
     revalidatePath("/habits");
     return { success: true };
   } catch (error) {
-    console.error("Failed to delete habit:", error);
+    logger.error("HabitActions", "Failed to delete habit", error);
     return { success: false, error: "Failed to delete habit from database" };
   }
 }
@@ -254,7 +255,7 @@ export async function toggleHabitLog(habitId: string | number, dayIndex: number)
     revalidatePath("/habits");
     return { success: true };
   } catch (error) {
-    console.error("Failed to toggle habit log:", error);
+    logger.error("HabitActions", "Failed to toggle habit log", error);
     return { success: false, error: "Failed to update log in database" };
   }
 }
@@ -370,7 +371,7 @@ export async function getDashboardStats(year: number) {
       totalLogs
     };
   } catch (error) {
-    console.error("Failed to fetch dashboard stats:", error);
+    logger.error("HabitActions", "Failed to fetch dashboard stats", error);
     return { success: false, error: "Failed to fetch stats", activeHabits: 0, days: [], distribution: [], weekdayData: [], totalLogs: 0 };
   }
 }
@@ -489,7 +490,7 @@ export async function getAnalyticsData(year: number) {
       }
     };
   } catch (error) {
-    console.error("Failed to fetch analytics stats:", error);
+    logger.error("HabitActions", "Failed to fetch analytics stats", error);
     return { success: false, error: "Failed to fetch analytics" };
   }
 }
