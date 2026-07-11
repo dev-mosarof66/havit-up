@@ -30,7 +30,7 @@ export async function createHabit(data: {
       frequency: data.frequency,
       daysOfWeek: data.daysOfWeek,
       categoryId: data.categoryId,
-      user: { id: session.id },
+      userId: session.id,
     });
     
     await habitRepo.save(newHabit);
@@ -107,7 +107,7 @@ export async function getHabits() {
     const habitRepo = dataSource.getRepository<Habit>("Habit");
     
     const habits = await habitRepo.find({
-      where: { user: { id: session.id } },
+      where: { userId: session.id },
       order: { time: 'ASC' },
       relations: {
         logs: true,
@@ -172,7 +172,7 @@ export async function updateHabit(id: string | number, data: {
     const session = await getSession();
     if (!session) return { success: false, error: "Unauthorized" };
 
-    const habit = await habitRepo.findOne({ where: { id: id as any, user: { id: session.id } } });
+    const habit = await habitRepo.findOne({ where: { id: id as any, userId: session.id } });
     if (!habit) return { success: false, error: "Habit not found" };
 
     habit.name = data.name;
@@ -201,7 +201,7 @@ export async function deleteHabit(id: string | number) {
     const session = await getSession();
     if (!session) return { success: false, error: "Unauthorized" };
 
-    const habit = await habitRepo.findOne({ where: { id: id as any, user: { id: session.id } } });
+    const habit = await habitRepo.findOne({ where: { id: id as any, userId: session.id } });
     if (!habit) return { success: false, error: "Habit not found" };
     const result = await habitRepo.delete({ id: id as any });
     if (result.affected === 0) {
@@ -234,11 +234,11 @@ export async function toggleHabitLog(habitId: string | number, dayIndex: number)
     const dateStr = `${currentYear}-${monthStr}-${dayStr}`;
 
     const habitRepo = dataSource.getRepository<Habit>("Habit");
-    const habit = await habitRepo.findOne({ where: { id: habitId as any, user: { id: session.id } } });
+    const habit = await habitRepo.findOne({ where: { id: habitId as any, userId: session.id } });
     if (!habit) return { success: false, error: "Habit not found" };
 
     const existingLog = await logRepo.findOne({
-      where: { habit: { id: habitId as any, user: { id: session.id } }, date: dateStr }
+      where: { habit: { id: habitId as any, userId: session.id }, date: dateStr }
     });
 
     if (existingLog) {
@@ -269,13 +269,13 @@ export async function getDashboardStats(year: number) {
     const logRepo = dataSource.getRepository<HabitLog>("HabitLog");
 
     const activeHabitsCount = await habitRepo.count({
-      where: { status: "active", user: { id: session.id } }
+      where: { status: "active", userId: session.id }
     });
 
     const logs = await logRepo.find({
       where: {
         date: Like(`${year}-%`),
-        habit: { user: { id: session.id } }
+        habit: { userId: session.id }
       },
       relations: {
         habit: true
@@ -386,11 +386,11 @@ export async function getAnalyticsData(year: number) {
 
     // Fetch all logs for the year
     const logs = await logRepo.find({
-      where: { date: Like(`${year}-%`), habit: { user: { id: session.id } } },
+      where: { date: Like(`${year}-%`), habit: { userId: session.id } },
       relations: { habit: { category: true } }
     });
 
-    const habits = await habitRepo.find({ where: { user: { id: session.id } }, relations: { logs: true } });
+    const habits = await habitRepo.find({ where: { userId: session.id }, relations: { logs: true } });
 
     // 1. Monthly Completions
     const monthlyCounts = new Array(12).fill(0);
