@@ -1,9 +1,6 @@
 "use server";
 
-import { getDataSource } from "@/lib/db";
-import { Habit } from "@/lib/entities/Habit";
-import { HabitLog } from "@/lib/entities/HabitLog";
-import { Category } from "@/lib/entities/Category";
+import { getDataSource, Habit, HabitLog, Category } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { Like } from "typeorm";
 import { getSession } from "@/app/actions/authActions";
@@ -22,7 +19,7 @@ export async function createHabit(data: {
     if (!session) return { success: false, error: "Unauthorized" };
 
     const dataSource = await getDataSource();
-    const habitRepo = dataSource.getRepository<Habit>("Habit");
+    const habitRepo = dataSource.getRepository(Habit);
     
     const newHabit = habitRepo.create({
       name: data.name,
@@ -65,7 +62,7 @@ export async function getCategories() {
     if (!session) return { success: false, error: "Unauthorized", categories: [] };
 
     const dataSource = await getDataSource();
-    const categoryRepo = dataSource.getRepository<Category>("Category");
+    const categoryRepo = dataSource.getRepository(Category);
     const categories = await categoryRepo.find({ order: { name: 'ASC' } });
     
     return { success: true, categories: categories.map(c => ({ id: c.id, name: c.name, color: c.color })) };
@@ -81,7 +78,7 @@ export async function createCategory(name: string, color: string = "#9ca3af") {
     if (!session) return { success: false, error: "Unauthorized" };
 
     const dataSource = await getDataSource();
-    const categoryRepo = dataSource.getRepository<Category>("Category");
+    const categoryRepo = dataSource.getRepository(Category);
     
     // check if it already exists
     const existing = await categoryRepo.findOne({ where: { name } });
@@ -105,7 +102,7 @@ export async function getHabits() {
     if (!session) return { success: false, error: "Unauthorized", habits: [] };
 
     const dataSource = await getDataSource();
-    const habitRepo = dataSource.getRepository<Habit>("Habit");
+    const habitRepo = dataSource.getRepository(Habit);
     
     const habits = await habitRepo.find({
       where: { userId: session.id },
@@ -168,7 +165,7 @@ export async function updateHabit(id: string | number, data: {
 }) {
   try {
     const dataSource = await getDataSource();
-    const habitRepo = dataSource.getRepository<Habit>("Habit");
+    const habitRepo = dataSource.getRepository(Habit);
     
     const session = await getSession();
     if (!session) return { success: false, error: "Unauthorized" };
@@ -197,7 +194,7 @@ export async function updateHabit(id: string | number, data: {
 export async function deleteHabit(id: string | number) {
   try {
     const dataSource = await getDataSource();
-    const habitRepo = dataSource.getRepository<Habit>("Habit");
+    const habitRepo = dataSource.getRepository(Habit);
     
     const session = await getSession();
     if (!session) return { success: false, error: "Unauthorized" };
@@ -223,7 +220,7 @@ export async function toggleHabitLog(habitId: string | number, dayIndex: number)
     if (!session) return { success: false, error: "Unauthorized" };
 
     const dataSource = await getDataSource();
-    const logRepo = dataSource.getRepository<HabitLog>("HabitLog");
+    const logRepo = dataSource.getRepository(HabitLog);
     
     const now = new Date();
     const currentYear = now.getFullYear();
@@ -234,7 +231,7 @@ export async function toggleHabitLog(habitId: string | number, dayIndex: number)
     const dayStr = String(day).padStart(2, '0');
     const dateStr = `${currentYear}-${monthStr}-${dayStr}`;
 
-    const habitRepo = dataSource.getRepository<Habit>("Habit");
+    const habitRepo = dataSource.getRepository(Habit);
     const habit = await habitRepo.findOne({ where: { id: habitId as any, userId: session.id } });
     if (!habit) return { success: false, error: "Habit not found" };
 
@@ -266,8 +263,8 @@ export async function getDashboardStats(year: number) {
     if (!session) return { success: false, error: "Unauthorized", activeHabits: 0, days: [], distribution: [], weekdayData: [], totalLogs: 0 };
 
     const dataSource = await getDataSource();
-    const habitRepo = dataSource.getRepository<Habit>("Habit");
-    const logRepo = dataSource.getRepository<HabitLog>("HabitLog");
+    const habitRepo = dataSource.getRepository(Habit);
+    const logRepo = dataSource.getRepository(HabitLog);
 
     const activeHabitsCount = await habitRepo.count({
       where: { status: "active", userId: session.id }
@@ -382,8 +379,8 @@ export async function getAnalyticsData(year: number) {
     if (!session) return { success: false, error: "Unauthorized", data: null };
 
     const dataSource = await getDataSource();
-    const habitRepo = dataSource.getRepository<Habit>("Habit");
-    const logRepo = dataSource.getRepository<HabitLog>("HabitLog");
+    const habitRepo = dataSource.getRepository(Habit);
+    const logRepo = dataSource.getRepository(HabitLog);
 
     // Fetch all logs for the year
     const logs = await logRepo.find({

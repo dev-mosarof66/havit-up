@@ -39,3 +39,5 @@ export async function getDataSource() {
   }
   return dataSource;
 }
+
+export { Habit, HabitLog, Category, User };

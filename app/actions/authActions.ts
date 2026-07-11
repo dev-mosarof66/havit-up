@@ -1,7 +1,6 @@
 "use server";
 
-import { getDataSource } from "@/lib/db";
-import { User } from "@/lib/entities/User";
+import { getDataSource, User } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
