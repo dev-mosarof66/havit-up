@@ -12,7 +12,7 @@ export interface InactiveHabit {
 
 interface InactiveHabitsProps {
   habits: InactiveHabit[];
-  onReactivate?: (id: string | number) => void;
+  onReactivate?: (id: string | number) => Promise<void> | void;
   onDelete?: (id: string | number) => void;
 }
 
@@ -27,6 +27,8 @@ const formatTimeAMPM = (timeString?: string) => {
 };
 
 export default function InactiveHabits({ habits, onReactivate, onDelete }: InactiveHabitsProps) {
+  const [reactivatingId, setReactivatingId] = React.useState<string | number | null>(null);
+
   if (habits.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center w-full h-32 border border-dashed border-[#27272a] bg-[#121212]/50">
@@ -72,11 +74,25 @@ export default function InactiveHabits({ habits, onReactivate, onDelete }: Inact
               <td className="py-3 px-4 bg-[#121212] group-hover:bg-[#18181b] transition-colors text-right">
                 <div className='flex items-center gap-2 justify-end'>
                   <button
-                    onClick={() => onReactivate && onReactivate(habit.id)}
+                    onClick={async () => {
+                      if (onReactivate) {
+                        setReactivatingId(habit.id);
+                        await onReactivate(habit.id);
+                        setReactivatingId(null);
+                      }
+                    }}
+                    disabled={reactivatingId === habit.id}
                     title='Restore'
-                    className="text-xs font-medium text-white hover:text-black hover:bg-white bg-[#27272a] px-3 py-1.5 rounded-md transition-colors"
+                    className="text-xs font-medium text-white hover:text-black hover:bg-white bg-[#27272a] px-3 py-1.5 rounded-md transition-colors disabled:opacity-50 flex items-center justify-center min-w-[36px]"
                   >
-                    <FaTrashRestore className='text-sm' />
+                    {reactivatingId === habit.id ? (
+                      <svg className="animate-spin h-3.5 w-3.5 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    ) : (
+                      <FaTrashRestore className='text-sm' />
+                    )}
                   </button>
                   <button
                     onClick={() => onDelete && onDelete(habit.id)}

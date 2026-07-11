@@ -31,15 +31,31 @@ const formatTimeAMPM = (timeString?: string) => {
   return `${formattedHour}:${minute} ${ampm}`;
 };
 
-const CustomCheckbox = ({ checked, onChange }: { checked: boolean; onChange: () => void }) => {
+const CustomCheckbox = ({ 
+  checked, 
+  onChange, 
+  disabled, 
+  title 
+}: { 
+  checked: boolean; 
+  onChange: () => void; 
+  disabled?: boolean; 
+  title?: string;
+}) => {
   return (
     <div
-      onClick={onChange}
-      className={`w-[14px] h-[14px] rounded-[3px] flex items-center justify-center cursor-pointer transition-colors ${checked ? 'bg-white border border-white' : 'border border-[#27272a] hover:border-[#3f3f46]'
+      onClick={disabled ? undefined : onChange}
+      title={title}
+      className={`w-[14px] h-[14px] rounded-[3px] flex items-center justify-center transition-colors ${
+        disabled 
+          ? 'bg-[#18181b] border border-[#27272a] opacity-30 cursor-not-allowed'
+          : checked 
+            ? 'bg-white border border-white cursor-pointer' 
+            : 'border border-[#27272a] hover:border-[#3f3f46] cursor-pointer'
         }`}
     >
       {checked && (
-        <svg className="w-2.5 h-2.5 text-black" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+        <svg className={`w-2.5 h-2.5 ${disabled ? 'text-gray-500' : 'text-black'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="20 6 9 17 4 12"></polyline>
         </svg>
       )}
@@ -126,8 +142,16 @@ const HabitTable: React.FC<HabitTableProps> = ({ habits, onToggleDay, onEdit, on
         </thead>
         <tbody>
           {habits.map((habit) => {
+            let targetDaysInMonth = daysInMonth;
+            if (habit.daysOfWeek && habit.daysOfWeek.length > 0 && habit.daysOfWeek.length < 7) {
+              targetDaysInMonth = daysArray.reduce((acc, day) => {
+                const d = new Date(currentYear, currentMonth, day).getDay();
+                return habit.daysOfWeek!.includes(d) ? acc + 1 : acc;
+              }, 0);
+            }
+
             const completedCount = habit.history.filter(Boolean).length;
-            const percentage = (completedCount / daysInMonth) * 100;
+            const percentage = targetDaysInMonth > 0 ? (completedCount / targetDaysInMonth) * 100 : 0;
 
             return (
               <tr key={habit.id} className="border-b border-[#27272a] hover:bg-white/2 transition-colors group">
@@ -163,16 +187,24 @@ const HabitTable: React.FC<HabitTableProps> = ({ habits, onToggleDay, onEdit, on
                 </td>
 
                 {/* Data: Calendar Days Checkboxes */}
-                {daysArray.map((_, index) => (
-                  <td key={index} className="py-2.5 px-1 text-center">
-                    <div className="flex justify-center">
-                      <CustomCheckbox
-                        checked={!!habit.history[index]}
-                        onChange={() => onToggleDay(habit.id, index)}
-                      />
-                    </div>
-                  </td>
-                ))}
+                {daysArray.map((_, index) => {
+                  const dayDate = new Date(currentYear, currentMonth, index + 1);
+                  const dayOfWeek = dayDate.getDay();
+                  const isAvailable = !habit.daysOfWeek || habit.daysOfWeek.length === 0 || habit.daysOfWeek.includes(dayOfWeek);
+
+                  return (
+                    <td key={index} className="py-2.5 px-1 text-center">
+                      <div className="flex justify-center">
+                        <CustomCheckbox
+                          checked={!!habit.history[index]}
+                          onChange={() => onToggleDay(habit.id, index)}
+                          disabled={!isAvailable}
+                          title={!isAvailable ? "This habit is not set for this day" : undefined}
+                        />
+                      </div>
+                    </td>
+                  );
+                })}
 
                 {/* Data: Progress */}
                 <td className="py-2.5 px-4 text-[#d4d4d8] flex justify-end">

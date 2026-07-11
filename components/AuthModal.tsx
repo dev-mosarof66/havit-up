@@ -76,7 +76,9 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
             </p>
           </div>
 
-          <form className="flex flex-col gap-4 relative z-10" action={async (formData) => {
+          <form className="flex flex-col gap-4 relative z-10" onSubmit={async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.currentTarget);
             setError('');
             setIsLoading(true);
             const res = mode === 'login' ? await loginUser(formData) : await registerUser(formData);
@@ -149,9 +151,19 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
             <button 
               type="submit"
               disabled={isLoading}
-              className="w-full mt-4 bg-white text-black font-bold py-3.5 hover:bg-gray-200 transition-colors shadow-[0_0_20px_rgba(255,255,255,0.1)] disabled:opacity-50"
+              className="w-full mt-4 bg-white text-black font-bold py-3.5 hover:bg-gray-200 transition-colors shadow-[0_0_20px_rgba(255,255,255,0.1)] disabled:opacity-50 flex items-center justify-center"
             >
-              {isLoading ? 'Please wait...' : (mode === 'login' ? 'Sign In' : 'Create Account')}
+              {isLoading ? (
+                <div className="flex items-center gap-2">
+                  <svg className="animate-spin h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>Please wait...</span>
+                </div>
+              ) : (
+                mode === 'login' ? 'Sign In' : 'Create Account'
+              )}
             </button>
           </form>
 

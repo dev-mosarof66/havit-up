@@ -1,7 +1,8 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from "typeorm";
-import type { Habit } from "./Habit";
+import type { Relation } from "typeorm";
+import { Habit } from "./Habit";
 
-@Entity()
+@Entity("user")
 export class User {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
@@ -21,6 +22,6 @@ export class User {
   @UpdateDateColumn()
   updatedAt!: Date;
 
-  @OneToMany("Habit", (habit: Habit) => habit.user)
-  habits!: Habit[];
+  @OneToMany(() => Habit, (habit: Habit) => habit.user)
+  habits!: Relation<Habit>[];
 }

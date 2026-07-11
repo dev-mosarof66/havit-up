@@ -4,7 +4,7 @@ import { Snackbar, Alert } from '@mui/material';
 interface NewHabitModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (habit: { name: string; description?: string; time: string; frequency: 'daily'|'weekly'|'custom'; daysOfWeek: number[]; categoryId: string }) => void;
+  onSave: (habit: { name: string; description?: string; time: string; frequency: 'daily'|'weekly'|'custom'; daysOfWeek: number[]; categoryId: string; category?: { id: string, name: string, color: string } }) => Promise<void> | void;
   initialData?: {
     name: string;
     description?: string;
@@ -35,9 +35,10 @@ export default function NewHabitModal({ isOpen, onClose, onSave, initialData }: 
   const [frequency, setFrequency] = useState<'daily' | 'weekly' | 'custom'>('daily');
   const [daysOfWeek, setDaysOfWeek] = useState<number[]>([]);
   const [categoryId, setCategoryId] = useState<string>('');
-  const [categories, setCategories] = useState<{ id: string, name: string }[]>([]);
+  const [categories, setCategories] = useState<{ id: string, name: string, color: string }[]>([]);
   const [errorToast, setErrorToast] = useState<{ open: boolean; message: string }>({ open: false, message: '' });
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   React.useEffect(() => {
     async function fetchCategories() {
@@ -72,14 +73,18 @@ export default function NewHabitModal({ isOpen, onClose, onSave, initialData }: 
   if (!isOpen) return null;
 
   const toggleDay = (dayValue: number) => {
-    setDaysOfWeek(prev =>
-      prev.includes(dayValue)
-        ? prev.filter(d => d !== dayValue)
-        : [...prev, dayValue].sort()
-    );
+    if (frequency === 'weekly') {
+      setDaysOfWeek([dayValue]);
+    } else {
+      setDaysOfWeek(prev =>
+        prev.includes(dayValue)
+          ? prev.filter(d => d !== dayValue)
+          : [...prev, dayValue].sort()
+      );
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
       setErrorToast({ open: true, message: "Habit name is required" });
@@ -95,14 +100,22 @@ export default function NewHabitModal({ isOpen, onClose, onSave, initialData }: 
       return;
     }
 
-    onSave({
+    if ((frequency === 'custom' || frequency === 'weekly') && daysOfWeek.length === 0) {
+      setErrorToast({ open: true, message: `Please select at least one day for ${frequency} frequency` });
+      return;
+    }
+
+    setIsSaving(true);
+    await onSave({
       name: name.trim(),
       description: description.trim() || undefined,
       time: time,
       frequency,
       daysOfWeek: frequency === 'daily' ? [0, 1, 2, 3, 4, 5, 6] : daysOfWeek,
-      categoryId: categoryId
+      categoryId: categoryId,
+      category: categories.find(c => c.id === categoryId)
     });
+    setIsSaving(false);
 
     // Reset form
     setName('');
@@ -193,7 +206,12 @@ export default function NewHabitModal({ isOpen, onClose, onSave, initialData }: 
                 <button
                   key={freq}
                   type="button"
-                  onClick={() => setFrequency(freq)}
+                  onClick={() => {
+                    setFrequency(freq);
+                    if (freq === 'weekly' && daysOfWeek.length > 1) {
+                      setDaysOfWeek([daysOfWeek[0]]);
+                    }
+                  }}
                   className={`flex-1 py-1.5 text-xs font-medium rounded-md capitalize transition-colors border ${frequency === freq
                       ? 'bg-white text-black border-white'
                       : 'bg-[#121212] text-gray-400 border-[#27272a] hover:border-gray-500'
@@ -205,10 +223,12 @@ export default function NewHabitModal({ isOpen, onClose, onSave, initialData }: 
             </div>
           </div>
 
-          {/* Days of Week (Only show if Custom) */}
-          {frequency === 'custom' && (
+          {/* Days of Week (Only show if Custom or Weekly) */}
+          {(frequency === 'custom' || frequency === 'weekly') && (
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-2">Select Days</label>
+              <label className="block text-xs font-medium text-gray-400 mb-2">
+                {frequency === 'weekly' ? 'Select Day' : 'Select Days'}
+              </label>
               <div className="flex justify-between gap-1">
                 {DAYS_OF_WEEK.map((day) => {
                   const isSelected = daysOfWeek.includes(day.value);
@@ -235,15 +255,23 @@ export default function NewHabitModal({ isOpen, onClose, onSave, initialData }: 
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-foreground hover:bg-[#27272a] rounded-md transition-colors"
+              disabled={isSaving}
+              className="px-4 py-2 text-sm font-medium text-foreground hover:bg-[#27272a] rounded-md transition-colors disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 text-sm font-medium bg-foreground text-background hover:bg-foreground/90 rounded-md transition-colors"
+              disabled={isSaving}
+              className="px-4 py-2 text-sm font-medium bg-foreground text-background hover:bg-foreground/90 rounded-md transition-colors disabled:opacity-50 flex items-center gap-2"
             >
-              {initialData ? 'Save Changes' : 'Create Habit'}
+              {isSaving && (
+                <svg className="animate-spin h-4 w-4 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              )}
+              {isSaving ? 'Saving...' : (initialData ? 'Save Changes' : 'Create Habit')}
             </button>
           </div>
         </form>

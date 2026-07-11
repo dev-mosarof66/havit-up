@@ -1,9 +1,10 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, ManyToOne, JoinColumn } from "typeorm";
-import type { HabitLog } from "./HabitLog";
-import type { Category } from "./Category";
-import type { User } from "./User";
+import type { Relation } from "typeorm";
+import { HabitLog } from "./HabitLog";
+import { Category } from "./Category";
+import { User } from "./User";
 
-@Entity()
+@Entity("habit")
 export class Habit {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
@@ -36,25 +37,25 @@ export class Habit {
   @UpdateDateColumn()
   updatedAt!: Date;
 
-  @OneToMany("HabitLog", (log: HabitLog) => log.habit)
-  logs!: HabitLog[];
+  @OneToMany(() => HabitLog, (log: HabitLog) => log.habit)
+  logs!: Relation<HabitLog>[];
 
-  @ManyToOne("Category", (category: Category) => category.habits, {
+  @ManyToOne(() => Category, (category: Category) => category.habits, {
     nullable: true,
     onDelete: "SET NULL",
   })
   @JoinColumn({ name: "categoryId" })
-  category?: Category;
+  category?: Relation<Category>;
 
   @Column({ type: "uuid" })
   categoryId!: string;
 
-  @ManyToOne("User", (user: User) => user.habits, {
+  @ManyToOne(() => User, (user: User) => user.habits, {
     nullable: false,
     onDelete: "CASCADE",
   })
   @JoinColumn({ name: "userId" })
-  user!: User;
+  user!: Relation<User>;
 
   @Column({ type: "uuid" })
   userId!: string;

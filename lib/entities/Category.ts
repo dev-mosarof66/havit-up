@@ -1,7 +1,8 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
-import type { Habit } from "./Habit";
+import type { Relation } from "typeorm";
+import { Habit } from "./Habit";
 
-@Entity()
+@Entity("category")
 export class Category {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
@@ -12,6 +13,6 @@ export class Category {
   @Column({ type: "varchar", default: "#9ca3af" }) // Default gray color
   color!: string;
 
-  @OneToMany("Habit", (habit: Habit) => habit.category)
-  habits!: Habit[];
+  @OneToMany(() => Habit, (habit: Habit) => habit.category)
+  habits!: Relation<Habit>[];
 }

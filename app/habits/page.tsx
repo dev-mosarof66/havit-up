@@ -94,7 +94,7 @@ export default function HabitsPage() {
           daysOfWeek: response.habit.daysOfWeek,
           time: response.habit.time,
           status: response.habit.status,
-          category: editingHabit?.category,
+          category: habitData.category || editingHabit?.category,
           history: Array(daysInMonth).fill(false)
         };
 
