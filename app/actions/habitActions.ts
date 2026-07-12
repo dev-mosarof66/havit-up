@@ -145,6 +145,11 @@ export async function getHabits() {
         category: h.category ? { id: h.category.id, name: h.category.name, color: h.category.color } : undefined,
         history
       };
+    }).sort((a, b) => {
+      if (!a.time && !b.time) return 0;
+      if (!a.time) return 1;
+      if (!b.time) return -1;
+      return a.time.localeCompare(b.time);
     });
     
     return { success: true, habits: formattedHabits };

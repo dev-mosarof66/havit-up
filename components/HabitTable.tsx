@@ -108,9 +108,10 @@ const HabitTable: React.FC<HabitTableProps> = ({ habits, onToggleDay, onEdit, on
         <thead>
           <tr className="border-b border-[#27272a] text-[#a1a1aa] text-xs">
             {/* Header: Habit Name */}
-            <th className="py-2.5 px-4 font-normal flex items-center gap-1.5 sticky left-0 bg-[#121212] z-10 w-[200px]">
+            <th className="w-full py-2.5 px-4 font-normal flex items-center gap-1.5 sticky left-0 bg-[#121212] z-10">
               <div className='w-full flex items-center justify-between'>
                 <span>Plans</span>
+                \
                 <span>Days</span>
               </div>
             </th>
